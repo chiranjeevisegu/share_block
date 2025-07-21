@@ -3,6 +3,10 @@ A secure, decentralized file sharing application that uses client-side encryptio
 
 🚀 Demo
 A screenshot of the BlockShare application interface.
+<img width="1885" height="985" alt="image" src="https://github.com/user-attachments/assets/28a06e26-c7f1-4799-9e13-6c39d07b440d" />
+
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/6cf9d2f9-c05a-4a91-938d-1d76a826b361" />
+
 Since this is a local-only version, there is no live demo link. Users can run it by following the installation instructions below.
 
 ✨ Features
@@ -48,3 +52,4 @@ This project is licensed under the MIT License. See the LICENSE file for details
 Chiranjeevi Segu - @chiranjeevisegu
 
 Project Link: https://github.com/chiranjeevisegu/share_block
+
