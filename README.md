@@ -1,41 +1,40 @@
-Project Title:
 BlockShare
+A secure, decentralized file sharing application that uses client-side encryption and simulates blockchain concepts for ultimate privacy.
 
 🚀 Demo
-A screenshot, animated GIF, or even a short video is highly recommended here. It's the first thing people will see.
-Link to the live, hosted version of your project.
-Live Demo
+A screenshot of the BlockShare application interface.
+Since this is a local-only version, there is no live demo link. Users can run it by following the installation instructions below.
 
 ✨ Features
-Feature 1: A brief description of the first key feature.
-Feature 2: A brief description of the second key feature.
-Feature 3: A brief description of the third key feature.
-Add as many as you need.
+Client-Side Encryption: Files are encrypted in the browser using AES. Your private files and password never leave your machine.
+Time-Locked Access: Set files to "self-destruct" after a specific duration (1 hour, 1 day, or 1 week), making them permanently inaccessible after the time expires.
+Proof of Existence: Generates a digital notary certificate with a timestamp and a unique SHA-256 hash, providing cryptographic proof that your file existed at a specific time.
+No Backend Required: The local version runs entirely in the browser with zero dependencies, making it incredibly portable and private.
 
 🛠️ Technology Stack
-A list of the major technologies, frameworks, and libraries you used.
 Frontend: HTML5, Tailwind CSS, JavaScript (ES6+)
 Libraries: CryptoJS
-Deployment: GitHub Pages / Netlify / Vercel (mention where you host it)
+Deployment: Runs locally in any modern web browser.
 
 ⚙️ Installation
-Clear, step-by-step instructions on how a developer can get your project running on their local machine.
+Getting this project running is simple.
 Clone the repository:
-git clone https://github.com/your-username/your-repository-name.git
+git clone https://github.com/chiranjeevisegu/share_block.git
 Navigate to the project directory:
-cd your-repository-name
-Open the index.html file:
-No further installation is needed. Simply open the index.html (or blockshare.html) file in your favorite web browser.
+cd share_block
+Open the blockshare.html file:
+No further installation is needed. Simply open the main HTML file in your favorite web browser.
 
 Usage
-Explain how to use the application after it's running.
-Drag and drop a file into the upload area.
-Enter a secure password and select an optional access duration.
+Drag and drop a file into the upload area or click to select it.
+Enter a secure password and select an optional access duration from the dropdown.
 Click "Encrypt & Notarize".
-Share the generated Transaction ID and your password with the recipient.
+Copy the generated Transaction ID from the activity log.
+Share the Transaction ID and your password with the person you want to give access to.
+Note: In this local version, all generated links are stored in the browser's memory and will be lost if you close or refresh the page.
 
 🤝 Contributing
-Contributions are welcome! If you have ideas for improvements or find a bug, please feel free to:
+Contributions are always welcome! If you have ideas for improvements or find a bug, please feel free to:
 Fork the Project
 Create your Feature Branch (git checkout -b feature/AmazingFeature)
 Commit your Changes (git commit -m 'Add some AmazingFeature')
@@ -46,6 +45,6 @@ Open a Pull Request
 This project is licensed under the MIT License. See the LICENSE file for details.
 
 📧 Contact
-Your Name - @YourTwitterHandle - email@example.com
+Chiranjeevi Segu - @chiranjeevisegu
 
-Project Link: [https://github.com/your-username/your-repository-name](https://github.com/chiranjeevisegu/share_block)
+Project Link: https://github.com/chiranjeevisegu/share_block
