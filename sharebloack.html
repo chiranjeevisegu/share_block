@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlockShare - Secure Decentralized File Sharing (Local Version)</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- CryptoJS for client-side encryption and hashing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+
+    <style>
+        /* Custom styles to enhance the design */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a; /* A very dark gray for the background */
+            color: #e5e7eb; /* Light gray for text */
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem; /* More rounded corners */
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #4f46e5, #c026d3);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(192, 38, 211, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(192, 38, 211, 0.4);
+        }
+        .btn-primary:disabled {
+            background: #374151;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .input-field, .select-field {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .input-field:focus, .select-field:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.5);
+        }
+        #file-drop-zone {
+            border-style: dashed;
+            transition: all 0.3s ease;
+        }
+        #file-drop-zone.dragover {
+            background-color: rgba(79, 70, 229, 0.2);
+            border-color: #4f46e5;
+        }
+        .log-item, .notary-cert {
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .notary-cert {
+            background: rgba(0,0,0,0.2);
+            border-left: 3px solid #c026d3;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="w-full max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-6xl font-black tracking-tighter">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">BlockShare</span>
+            </h1>
+            <p class="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
+                Securely share files with time-locked access and a blockchain-based digital notary.
+            </p>
+        </header>
+
+        <!-- Main Content: Upload and Download Cards -->
+        <main class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- UPLOAD CARD -->
+            <section id="upload-card" class="glass-card p-8">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="bg-indigo-500 p-3 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-4-4V7a4 4 0 014-4h10a4 4 0 014 4v5a4 4 0 01-4 4H7z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9l-3 3m0 0l-3-3m3 3V3" /></svg>
+                    </div>
+                    <h2 class="text-2xl font-bold">Secure & Notarize a File</h2>
+                </div>
+
+                <div id="file-drop-zone" class="border-2 border-gray-600 rounded-lg p-8 text-center cursor-pointer mb-4">
+                    <input type="file" id="file-input" class="hidden">
+                    <p id="file-label" class="text-gray-400">Drag & drop your file here, or click to select</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="password-input" class="block text-sm font-medium mb-2">Encryption Password</label>
+                        <input type="password" id="password-input" placeholder="Enter a strong password" class="input-field w-full p-3 rounded-lg">
+                    </div>
+                    <div>
+                        <label for="expiry-select" class="block text-sm font-medium mb-2">Access Duration</label>
+                        <select id="expiry-select" class="select-field w-full p-3 rounded-lg">
+                            <option value="0">Permanent</option>
+                            <option value="3600000">1 Hour</option>
+                            <option value="86400000">1 Day</option>
+                            <option value="604800000">1 Week</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button id="upload-btn" class="w-full btn-primary text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    Encrypt & Notarize
+                </button>
+            </section>
+
+            <!-- DOWNLOAD CARD -->
+            <section id="download-card" class="glass-card p-8">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="bg-purple-500 p-3 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    </div>
+                    <h2 class="text-2xl font-bold">Retrieve a File</h2>
+                </div>
+
+                <div class="mb-4">
+                    <label for="tx-id-input" class="block text-sm font-medium mb-2">File Transaction ID</label>
+                    <input type="text" id="tx-id-input" placeholder="Paste the transaction ID here" class="input-field w-full p-3 rounded-lg">
+                </div>
+
+                <div class="mb-4">
+                    <label for="decryption-password-input" class="block text-sm font-medium mb-2">Decryption Password</label>
+                    <input type="password" id="decryption-password-input" placeholder="Enter the password for the file" class="input-field w-full p-3 rounded-lg">
+                </div>
+                
+                <button id="download-btn" class="w-full btn-primary text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>
+                    Decrypt & Download
+                </button>
+            </section>
+        </main>
+        
+        <!-- Log/Status Area -->
+        <section id="log-section" class="w-full max-w-6xl mx-auto mt-8 glass-card p-6">
+            <h3 class="text-xl font-bold mb-4">Activity Log</h3>
+            <div id="log-messages" class="space-y-3 font-mono text-sm h-64 overflow-y-auto pr-2">
+                <p class="text-gray-500">Waiting for activity...</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // --- In-memory database to simulate decentralized storage ---
+        const fileDatabase = {};
+        
+        // --- DOM Element References ---
+        const fileInput = document.getElementById('file-input');
+        const fileDropZone = document.getElementById('file-drop-zone');
+        const fileLabel = document.getElementById('file-label');
+        const passwordInput = document.getElementById('password-input');
+        const expirySelect = document.getElementById('expiry-select');
+        const uploadBtn = document.getElementById('upload-btn');
+        
+        const txIdInput = document.getElementById('tx-id-input');
+        const decryptionPasswordInput = document.getElementById('decryption-password-input');
+        const downloadBtn = document.getElementById('download-btn');
+        
+        const logMessages = document.getElementById('log-messages');
+
+        // --- Utility for Logging ---
+        function log(message, type = 'info') {
+            if (logMessages.querySelector('.text-gray-500')) {
+                logMessages.innerHTML = ''; // Clear initial message
+            }
+            const colors = {
+                info: 'text-gray-400',
+                success: 'text-green-400',
+                error: 'text-red-400',
+                special: 'text-purple-400'
+            };
+            const logEntry = document.createElement('p');
+            logEntry.className = `log-item ${colors[type]}`;
+            logEntry.innerHTML = `&gt; ${message}`;
+            logMessages.prepend(logEntry);
+        }
+
+        // --- Display Digital Notary Certificate ---
+        function displayNotaryCertificate(block, txId) {
+            const expiryDate = block.expiresAt ? new Date(block.expiresAt).toLocaleString() : 'Never';
+            const certText = `
+                -----------------------------------------
+                PROOF OF EXISTENCE CERTIFICATE
+                -----------------------------------------
+                File Name....: ${block.fileName}
+                Timestamp....: ${new Date(block.timestamp).toLocaleString()}
+                Expires......: ${expiryDate}
+                File Hash....: ${block.fileHash}
+                TX ID........: ${txId}
+                -----------------------------------------
+            `;
+            
+            const certHtml = `
+                <div class="notary-cert">
+                    <h4 class="font-bold text-purple-300 mb-2">Digital Notarization Complete</h4>
+                    <pre class="whitespace-pre-wrap text-xs text-gray-300">${certText}</pre>
+                    <button onclick="navigator.clipboard.writeText(\`${certText.trim()}\`); log('Certificate copied!', 'info');" class="mt-2 text-sm text-indigo-400 hover:text-indigo-300">Copy Certificate</button>
+                </div>
+            `;
+            const certContainer = document.createElement('div');
+            certContainer.innerHTML = certHtml;
+            logMessages.prepend(certContainer);
+        }
+        
+        // --- Drag and Drop Functionality ---
+        fileDropZone.addEventListener('click', () => fileInput.click());
+        fileDropZone.addEventListener('dragover', (e) => { e.preventDefault(); fileDropZone.classList.add('dragover'); });
+        fileDropZone.addEventListener('dragleave', () => { fileDropZone.classList.remove('dragover'); });
+        fileDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                updateFileLabel();
+            }
+        });
+        fileInput.addEventListener('change', updateFileLabel);
+
+        function updateFileLabel() {
+            if (fileInput.files.length > 0) {
+                fileLabel.textContent = fileInput.files[0].name;
+                fileLabel.classList.add('text-indigo-400');
+            } else {
+                fileLabel.textContent = 'Drag & drop your file here, or click to select';
+                fileLabel.classList.remove('text-indigo-400');
+            }
+        }
+
+        // --- Core Upload Logic ---
+        uploadBtn.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            const password = passwordInput.value;
+            const expiryDuration = parseInt(expirySelect.value, 10);
+
+            if (!file || !password) {
+                log('Please select a file and enter a password.', 'error');
+                return;
+            }
+
+            log('Starting notarization process...');
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Processing...';
+
+            try {
+                const fileReader = new FileReader();
+                fileReader.onload = async (e) => {
+                    const fileData = e.target.result;
+                    log('File read successfully. Encrypting...');
+                    
+                    const encrypted = CryptoJS.AES.encrypt(fileData, password).toString();
+                    log('Encryption complete.', 'success');
+                    
+                    log('Generating file integrity hash...');
+                    const fileHash = CryptoJS.SHA256(CryptoJS.lib.WordArray.create(fileData)).toString();
+                    
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Fake network delay
+                    const transactionId = `0x${CryptoJS.lib.WordArray.random(32).toString()}`;
+                    
+                    const now = new Date();
+                    const block = {
+                        timestamp: now.toISOString(),
+                        expiresAt: expiryDuration > 0 ? new Date(now.getTime() + expiryDuration).toISOString() : null,
+                        fileHash: fileHash,
+                        fileName: file.name,
+                        fileType: file.type,
+                    };
+
+                    fileDatabase[transactionId] = {
+                        block: block,
+                        encryptedData: encrypted
+                    };
+
+                    log('Transaction created on simulated blockchain.', 'success');
+                    displayNotaryCertificate(block, transactionId);
+                    log(`Your secure file ID is: <strong class="text-yellow-300 cursor-pointer" onclick="navigator.clipboard.writeText('${transactionId}'); log('Copied to clipboard!', 'info');">${transactionId}</strong>`, 'special');
+                    
+                    fileInput.value = '';
+                    passwordInput.value = '';
+                    updateFileLabel();
+                };
+                
+                fileReader.readAsDataURL(file);
+
+            } catch (err) {
+                log(`An error occurred: ${err.message}`, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>Encrypt & Notarize';
+            }
+        });
+
+        // --- Core Download Logic ---
+        downloadBtn.addEventListener('click', () => {
+            const txId = txIdInput.value.trim();
+            const password = decryptionPasswordInput.value;
+
+            if (!txId || !password) {
+                log('Please provide a Transaction ID and a password.', 'error');
+                return;
+            }
+
+            log(`Searching for Transaction ID: ${txId.substring(0, 20)}...`);
+            const fileRecord = fileDatabase[txId];
+
+            if (!fileRecord) {
+                log('Transaction ID not found. The link may have expired or is incorrect.', 'error');
+                return;
+            }
+
+            // Check for file expiry
+            if (fileRecord.block.expiresAt && new Date() > new Date(fileRecord.block.expiresAt)) {
+                log(`ACCESS DENIED: This file expired on ${new Date(fileRecord.block.expiresAt).toLocaleString()}`, 'error');
+                delete fileDatabase[txId]; // Clean up expired record
+                return;
+            }
+            
+            log('File record found. Attempting to decrypt...');
+            downloadBtn.disabled = true;
+            downloadBtn.textContent = 'Decrypting...';
+
+            try {
+                const decryptedBytes = CryptoJS.AES.decrypt(fileRecord.encryptedData, password);
+                const decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+
+                if (!decryptedData) {
+                    throw new Error('Decryption failed. The password may be incorrect.');
+                }
+                
+                log('Decryption successful!', 'success');
+                
+                log('Verifying file integrity against blockchain record...');
+                const downloadedFileHash = CryptoJS.SHA256(CryptoJS.lib.WordArray.create(decryptedData)).toString();
+                
+                if (downloadedFileHash === fileRecord.block.fileHash) {
+                    log('File integrity verified. Hash matches.', 'success');
+                } else {
+                    log('CRITICAL: File integrity check failed! File may be corrupt or tampered with.', 'error');
+                }
+
+                const byteCharacters = atob(decryptedData.split(',')[1]);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: fileRecord.block.fileType });
+
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = fileRecord.block.fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+
+                log(`Download initiated for ${fileRecord.block.fileName}.`);
+
+            } catch (err) {
+                log(err.message || 'Decryption failed. Check your password.', 'error');
+            } finally {
+                downloadBtn.disabled = false;
+                downloadBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>Decrypt & Download';
+            }
+        });
+    </script>
+</body>
+</html>
